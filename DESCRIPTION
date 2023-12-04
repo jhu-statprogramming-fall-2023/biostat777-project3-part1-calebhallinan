@@ -1,12 +1,18 @@
 Package: STTileMaker
-Title: What the Package Does (One Line, Title Case)
+Title: Make Tiles of each Spot in a Spatial Transcriptomics Dataset
 Version: 0.0.0.9000
 Authors@R: 
-    person("First", "Last", , "first.last@example.com", role = c("aut", "cre"),
-           comment = c(ORCID = "YOUR-ORCID-ID"))
-Description: What the package does (one paragraph).
-License: `use_mit_license()`, `use_gpl3_license()` or friends to pick a
-    license
+    person(given = "Caleb", 
+    family = "Hallinan",
+    email = "challin1@jh.edu", 
+    role = c("aut", "cre"),
+           comment = c(ORCID = "0009-0000-9137-1293"))
+Description: This package
+License: MIT + file LICENSE
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.2.3
+Suggests: 
+    knitr,
+    rmarkdown
+VignetteBuilder: knitr

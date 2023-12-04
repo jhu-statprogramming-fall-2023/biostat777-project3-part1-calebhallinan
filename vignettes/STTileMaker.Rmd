@@ -1,0 +1,31 @@
+---
+title: "STTileMaker"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{STTileMaker}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+
+## Read in Functions
+
+```{r setup}
+# read in functions
+library(STTileMaker) # custom functions
+library(ggplot2) # for plotting
+library(tidyverse) # for data manipulation
+library(here) # for file archiving
+library(paletteer) # for colors
+library(ggrepel) # for plotting
+```
+
+
+## Demonstration of STTileMaker
