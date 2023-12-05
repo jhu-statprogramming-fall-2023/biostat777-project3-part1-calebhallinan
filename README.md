@@ -22,7 +22,12 @@ STTileMaker
 
 
 ## Example
-XXX
+
+####Make Tiles of each Spot in a Spatial Transcriptomics Dataset####
+
+directory = here("data/f12hr_140_processed/outs/")
+
+tiles = STTileMaker(directory)
 
 
 ## How to Download
