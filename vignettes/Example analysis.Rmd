@@ -1,0 +1,209 @@
+---
+title: "An Example of STTileMaker Usage"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{STTileMaker}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+
+## Goal of this Analysis
+
+My current rotation project in Dr. Jean Fan's lab involves predicting gene expression from H&E images using spatial transcriptomics (ST) data. The method I have been using is called [Hist2ST](https://pubmed.ncbi.nlm.nih.gov/35849101/), which came out in 2022 and is one of the more popular methods to do this thus far in python. However, I have run into some trouble understanding their code and therefore implementing their method on our own data. Eventually I figured it out, but one task I had to do was make a new function to make "tiles" of the ST data where each spot was located. 
+
+From my understanding thus far in the ST field, many researchers work in R and not python. Therefore, I wanted to transfer my workflow to be in both python and R. So, I decided to create a similar tile function in R and name it STTileMaker.
+
+The goal of the function is quite simple - make tiles of the H&E image exactly where spots are located in the image. With this data, we can perform more downstream analysis such as RGB and gene expression correlation, classification of spots, and eventually become input to an algorithm in R that will predict gene expression of these tiles. For the purpose of this data analysis, I will demonstrate correlation between gene expression and RGB information in the H&E images.
+
+Questions then become:
+
+1. What gene is most correlated to RGB intensities in an H&E image?
+
+2. What gene is least correlated to RGB intensities in an H&E image? 
+
+3. ???
+
+The data of interest is a public dataset located at the  [(Re)Building a Kidney Consortium database](https://www.atlas-d2k.org/chaise/record/#2/RNASeq:Experiment/RID=17-H1QC). It is a spatial gene expression dataset by Space Ranger 1.2.1 from "a 8-10 week old C57BL6/J female mouse kidneys at time point 12 hours (n=1) following bilateral ischemia reperfusion injury." For more information on the data, including a dictionary and structure of the data, please click on the link. Unfortunately, the dataset is quite large and therefore I was not able to add it to github. 
+
+To download the data, 
+
+
+## Read in Functions
+
+```{r setup}
+# read in functions
+library(STTileMaker) # custom functions
+library(ggplot2) # for plotting
+library(tidyverse) # for data manipulation
+library(here) # for file archiving
+library(paletteer) # for colors
+library(ggrepel) # for plotting
+library(googledrive)
+
+```
+
+
+
+## Read in data, download if not there
+
+```{r}
+
+# if file doesn't exist, download the data
+if (!file.exists(here("data/f12hr_140_processed/"))) {
+  
+  # message it wasn't found
+  message("File not found, downloading now...")
+  
+  # create dir if needed
+  dir.create(here("data/"))
+  
+  # URL of the file
+  url <- "https://www.atlas-d2k.org/hatrac/resources/rnaseq/study/17-E9P0/study_files/64ee25aacce94ff9a42850f158097813.tar.gz:JW6WAUMAZJ5TT3SF2LGG3C6V2U"
+  
+  # Destination file path (you can change this to your desired path and filename)
+  dest_file <- here("data/downloaded_file.tar.gz")
+  
+  # Download the file
+  download.file(url, dest_file, mode = "wb")
+  
+  # Assuming the file is named "downloaded_file.tar.gz" and is in the current working directory
+  file_name <- "downloaded_file.tar.gz"
+  
+  # Extract the file
+  untar(here("data/downloaded_file.tar.gz"), exdir = here("data/"))
+  
+  # tarfile_list <- untar(file_name, list = TRUE)
+  # print(tarfile_list)
+
+  # message when done
+  message("Finished!") 
+}
+
+```
+
+
+
+## Demonstration of STTileMaker
+
+```{r, fig.align='center'}
+# read in data
+
+# NOTE: make data easier to get
+data = STTileMaker_read_data(here::here("data/f12hr_140_processed/outs/"))
+
+# make tiles
+tiles = STTileMaker_make_tiles(data)
+
+# check to see it works
+STTileMaker_plot_tile(tiles, 1)
+STTileMaker_plot_tile(tiles, 100)
+```
+
+
+
+## Check correlation of RGB image and gene expression
+
+```{r, message=FALSE, warning=FALSE}
+# grab the mean of each red channel in each tile
+features <- sapply(1:length(tiles), function(i) {
+    #1 - mean(tiles[[i]])
+    mean(tiles[[i]][,,1]) ## red
+    # mean(tiles[[i]][,,1] - tiles[[i]][,,3]) ## red minus blue
+})
+# set names of the features
+names(features) <- names(tiles)
+
+# plot the histogram 
+ggplot(data = data.frame(features), aes(x = features)) + geom_histogram()
+
+
+# normalize the data
+normFactor <- colSums(as.matrix(data$geneCountsClean))
+mat <- t(t(as.matrix(data$geneCountsClean))/normFactor)
+mat <- log10(mat * 1e6 +1)
+
+# get correlation of each tile with gene expression
+cors <- sapply(rownames(mat), function(g) {
+    cor(mat[g,], features)
+})
+
+# plot the histogram 
+ggplot(data = data.frame(cors), aes(x = cors)) + geom_histogram()
+
+# get worst and best correlated gene
+g_min = names(which(cors == min(cors, na.rm=TRUE)))
+g_max = names(which(cors == max(cors, na.rm=TRUE)))
+
+
+####
+
+
+# 
+# ggexp <- scale(mat[g,])[,1]
+# df <- data.frame(data$posClean, ggexp)
+# 
+# 
+# 
+# ## now we can plot with the image
+# x <- grid::rasterGrob(data$img,
+#                       interpolate = FALSE,
+#                       width = grid::unit(1, "npc"),
+#                       height = grid::unit(1, "npc"))
+# 
+# plt <- ggplot() +
+#     annotation_custom(
+#         grob = x,
+#         xmin = 0,
+#         xmax = ncol(x$raster),
+#         ymin = 0,
+#         ymax = nrow(x$raster)) +
+#     coord_fixed(
+#         xlim = c(0, ncol(x$raster)),
+#         ylim = c(0, nrow(x$raster))) +
+#     theme_void()
+# plt
+# 
+# plt + geom_point(aes(x = x, y = y,
+#                      color = ggexp),
+#                  size = data$r/5,
+#                  data = df) + ggtitle(g) +
+#     scale_colour_gradient2(
+#         low = "blue",
+#         mid = "white",
+#         high = "red")
+# 
+# plot(mat[g,], features)
+# cor(mat[g,], features)
+# 
+# ## note since I'm using the low res image, tiles are very small, not many features beyond intensities
+# dim(tiles[[1]])
+
+```
+
+
+
+## Functions Used
+
+
+
+To note: I asked if I could use a non-TidyTuesday dataset on the discussion board and Joe said "As long as you adhere to principles of reproducibility (make data accessible/available in some fashion, etc), then that is totally fine." So I did, and thanks for letting me!
+
+
+
+
+
+
+
+
+
+
+
+

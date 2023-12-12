@@ -44,5 +44,4 @@ Clone this repository and build the package from within R
 
 ## Notes/Thoughts:
 
-- This was a cool project! I wish I could have created my own functions as my project, but really appreciated learning all the steps to make a R package.
-- Also, I know this isn't the best package name but it's like a few random functions so I didn't know what else to call it
+- This was a cool project! I am glad I was able to create a function that I can use for my research :)
