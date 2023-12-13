@@ -83,5 +83,6 @@ Clone this repository and build the package from within R
 
 ## Notes/Thoughts:
 
-- This was a cool project! I am glad I was able to create a function that I can use for my research :)
+- I am hosting the package through my github: calebhallinan as I want to continue to work on this package. I hope that is ok!
 - Unfortunately, I was not able to get the here package to work in my vignette folder. Therefore, you will see direct path locations. I will continue to look into this, but wanted to let you know!
+- This was a cool project! I am glad I was able to create a function that I can use for my research :)
