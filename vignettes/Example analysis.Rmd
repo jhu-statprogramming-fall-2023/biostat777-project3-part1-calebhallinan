@@ -2,7 +2,7 @@
 title: "How to use STTileMaker + an Example Analysis"
 output: rmarkdown::html_vignette
 vignette: >
-  %\VignetteIndexEntry{STTileMaker}
+  %\VignetteIndexEntry{How to use STTileMaker + an Example Analysis}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---
@@ -33,9 +33,13 @@ Questions in the analysis then become:
 
 3. Does one channel predict better than others?
 
-The data of interest is freely accessible from the[(Re)Building a Kidney Consortium database](https://www.atlas-d2k.org/chaise/record/#2/RNASeq:Experiment/RID=17-H1QC), offering a comprehensive spatial gene expression profile created using Space Ranger 1.2.1. The data encapsulates gene expression from the kidneys of an 8-10 week old C57BL6/J female mouse, specifically captured at the 12-hour mark following bilateral ischemia reperfusion injury. For detailed insights, including a data dictionary and the data's structure, I encourage visiting the provided link.
+The data of interest is freely accessible from the [(Re)Building a Kidney Consortium database](https://www.atlas-d2k.org/chaise/record/#2/RNASeq:Experiment/RID=17-H1QC), offering a comprehensive spatial gene expression profile created using Space Ranger 1.2.1. The data encapsulates gene expression from the kidneys of an 8-10 week old C57BL6/J female mouse, specifically captured at the 12-hour mark following bilateral ischemia reperfusion injury. For detailed insights, including a data dictionary and the data's structure, I encourage visiting the provided link.
 
 Due to the large size of the dataset, it was not possible to host it on GitHub. Nonetheless, I've included a snippet of code that, when executed, will facilitate the direct download of the dataset into a locally designated folder named "data." I hope this proves helpful!
+
+
+
+## Reading in the Data
 
 Now, lets begin the analysis. First we will read in all the necassary packages for the analysis.
 
@@ -54,45 +58,51 @@ The code below is the code snippit that will gather the data from the website an
 
 ```{r}
 # if file doesn't exist, download the data
-if (!file.exists(here("data/f12hr_140_processed/"))) {
+# if (!file.exists(here("data/f12hr_140_processed/"))) {
+if (!file.exists("~/Desktop/jhu/rotations/fan/STTileMaker/data/f12hr_140_processed/outs/")) {
   
   # message it wasn't found
   message("File not found, downloading now...")
-  
+
   # create dir if needed
-  dir.create(here("data/"))
-  
+  # dir.create(here("data/"))
+  dir.create("~/Desktop/jhu/rotations/fan/STTileMaker/data/")
+
   # URL of the file
-  url <- "https://www.atlas-d2k.org/hatrac/resources/rnaseq/study/17-E9P0/study_files/64ee25aacce94ff9a42850f158097813.tar.gz:JW6WAUMAZJ5TT3SF2LGG3C6V2U"
-  
+  url = "https://www.atlas-d2k.org/hatrac/resources/rnaseq/study/17-E9P0/study_files/64ee25aacce94ff9a42850f158097813.tar.gz:JW6WAUMAZJ5TT3SF2LGG3C6V2U"
+
   # Destination file path (you can change this to your desired path and filename)
-  dest_file <- here("data/downloaded_file.tar.gz")
-  
+  # dest_file = here("data/downloaded_file.tar.gz")
+  dest_file = "~/Desktop/jhu/rotations/fan/STTileMaker/data/downloaded_file.tar.gz"
+
   # Download the file
   download.file(url, dest_file, mode = "wb")
-  
+
   # Assuming the file is named "downloaded_file.tar.gz" and is in the current working directory
-  file_name <- "downloaded_file.tar.gz"
-  
+  file_name = "downloaded_file.tar.gz"
+
   # Extract the file
-  untar(here("data/downloaded_file.tar.gz"), exdir = here("data/"))
-  
-  # tarfile_list <- untar(file_name, list = TRUE)
+  # untar(here("data/downloaded_file.tar.gz"), exdir = here("data/"))
+  untar(dest_file, exdir = "~/Desktop/jhu/rotations/fan/STTileMaker/data/")
+
+  # tarfile_list = untar(file_name, list = TRUE)
   # print(tarfile_list)
 
   # message when done
-  message("Finished!") 
+  message("Finished!")
 }
 ```
-
 
 Since we have all the data downloaded, we are ready to read it in with the "STTileMaker_read_data" function within the package. The object "data" within the code, which is our read in data, is a list of lists containing important features needed such as spot positions, cleaned expression data, etc. For all functions within the package please take a look at the docs section for more details.
 
 After the data is read in, we can create the tiles from each spot's location by running the "STTileMaker_make_tiles" function. The output is a list of images, where each image is a "tile" or "patch" of the H&E image that contains a single spot. To ensure it worked successfully, we run the "STTileMaker_plot_tile" function to plot a single tile to view.
 
+NOTE: Unfortunately, R-markdown would not allow me to knit this was the function here(). Therefore, if you would like to replicate this code you NEED to change the directory to where your data is located.
+
 ```{r, fig.align='center'}
 # read in data
-data = STTileMaker_read_data(here::here("data/f12hr_140_processed/outs/"))
+# data = STTileMaker_read_data(here::here("data/f12hr_140_processed/outs/"))
+data =STTileMaker_read_data("~/Desktop/jhu/rotations/fan/STTileMaker/data/f12hr_140_processed/outs/")
 
 # make tiles
 tiles = STTileMaker_make_tiles(data)
@@ -100,48 +110,54 @@ tiles = STTileMaker_make_tiles(data)
 # check to see it works
 STTileMaker_plot_tile(tiles, 1)
 STTileMaker_plot_tile(tiles, 100)
-# works!!
+# it works!!
 ```
 
 As the package continues to evolve, additional functions will be incorporated. However, the above selection represents the full range of functionalities available at this moment.
 
 Now begins the analysis! 
 
-```{r, fig.align='center'}
+
+
+## Data Analysis
+
+```{r, fig.align='center', fig.width=7, fig.height=5}
 # grab the mean of each red channel in each tile
-features <- map_dbl(tiles, ~ mean(.x[,,1])) # red channel
+features = map_dbl(tiles, ~ mean(.x[,,1])) # red channel
 
 # set names of the features
-names(features) <- names(tiles)
+names(features) = names(tiles)
 
 # plot the histogram 
 ggplot(data = data.frame(features), aes(x = features)) + 
   geom_histogram() +
   theme_linedraw() +
   labs(
-    x = "Mean value of Red Channel",
+    x = "Mean Value of Red Channel",
     y = "Count",
-    title = paste0("Mean Red Channel values"),
+    title = "Mean Values of Tiles within the Red Channel",
     subtitle = str_wrap(paste0("Mean values of the red channel per tile. Note that it is fairly high for all tiles
-                               located within tissue."), width = 100),
+                               located within tissue and is characterized by a normal distribution."), width = 100),
     caption = "Data Source: Kidney Consortium database"
   )  +
   theme(axis.text.y = element_blank(), axis.ticks.y = element_blank(), plot.title = 
           element_text(face = "bold", hjust = 0.5), axis.text.x = element_text(size = 10))
 ```
 
+The first plot shown above is a distribution of the mean values of the red channel. We see that it is normally distributed with a fairly high mean (range is 0-1). 
 
+Next we see the distribution of correlation between the red channel and gene expression per tile. Unfortunately, we see that there is no strong correlation with any genes within the red channel. However, the red channel was found to be the best correlated channel with gene expression compared to blue and green. The other two channel results are not shown here, so I encourage you to try for yourself to confirm!
 
-```{r, fig.align='center'}
+```{r, fig.align='center', fig.width=7, fig.height=5}
 # normalize the data
-normFactor <- colSums(as.matrix(data$geneCountsClean))
-mat <- t(t(as.matrix(data$geneCountsClean))/normFactor)
-mat <- log10(mat * 1e6 +1)
+normFactor = colSums(as.matrix(data$geneCountsClean))
+mat = t(t(as.matrix(data$geneCountsClean))/normFactor)
+mat = log10(mat * 1e6 +1)
 
 # get correlation of each tile with gene expression
-cors_list <- map(rownames(mat), ~ cor(mat[.x, ], features))
+cors_list = map(rownames(mat), ~ cor(mat[.x, ], features))
 # Convert the list to a numeric vector
-cors <- unlist(cors_list)
+cors = unlist(cors_list)
 
 
 # plot the histogram 
@@ -150,7 +166,7 @@ ggplot(data = data.frame(cors), aes(x = cors)) +
   labs(
     x = "Correlation",
     y = "Count",
-    title = paste0("Mean Correlation between Red Channel and Gene Expression"),
+    title = paste0("Mean Correlation between the Red Channel and Gene Expression"),
     subtitle = str_wrap(paste0("Correlation histogram of gene expression with the tissue and 
                                red channel values. Note the little deviation from 0, as only a few
                                genes are found to be correlated."), width = 100),
@@ -161,25 +177,26 @@ ggplot(data = data.frame(cors), aes(x = cors)) +
 
 ```
 
+Next, I wanted to see what the highest correlated gene and lowest correlated gene was when looking at the red channel. 
 
-```{r, fig.align='center'}
+```{r, fig.align='center', fig.width=7, fig.height=5}
 # get best correlated gene
 # Assuming 'cors' is a named numeric vector
-cors_df <- tibble(name = rownames(mat), value = cors)
+cors_df = tibble(name = rownames(mat), value = cors)
 
 # Finding the names with the minimum 'cors' value
-g_max <- cors_df %>%
-  filter(value == max(value, na.rm = TRUE)) %>%
+g_max = cors_df |>
+  filter(value == max(value, na.rm = TRUE)) |>
   pull(name)
 
 # get scaled expression of gene
-ggexp <- scale(mat[g_max,])[,1]
+ggexp = scale(mat[g_max,])[,1]
 # get locations
-df <- data.frame(data$posClean, ggexp)
+df = data.frame(data$posClean, ggexp)
 
 
 # Calculate the correlation coefficient
-corr_coefficient <- cor(mat[g_max, ], features)
+corr_coefficient = cor(mat[g_max, ], features)
 
 ggplot() + 
   geom_point(aes(x = mat[g_max,], y = features)) +
@@ -193,19 +210,25 @@ ggplot() +
                                with the red channel values."), width = 100),
     caption = "Data Source: Kidney Consortium database"
   )  +
-  annotate("text", x = -Inf, y = -Inf, label = sprintf("R: %.2f", corr_coefficient), 
+  annotate("text", x = -Inf, y = -Inf, label = sprintf("Correlation: %.2f", corr_coefficient), 
            hjust = -0.1, vjust = -.2, size = 5, color = "red") +  # customize theme
   theme(axis.text.y = element_blank(), axis.ticks.y = element_blank(), plot.title = 
           element_text(face = "bold", hjust = 0.5), axis.text.x = element_text(size = 10))
 
+```
 
+As we see, the highest correlated gene was Kap with a correlation of 0.41. While this is not particularly a strong correlation, it is better than nothing and serves as a great base for future analysis! We see there are lots of spots within the tissue that has 0 expression, with a big leap to a log expression of 2 or higher. Very interesting to see, and something that is worth diving into more to understand!
+
+Now let's see what the highest correlated gene, Kap, looks like on the tissue.
+
+```{r}
 # now we can plot with the image
-x <- grid::rasterGrob(data$img,
+x = grid::rasterGrob(data$img,
                       interpolate = FALSE,
                       width = grid::unit(1, "npc"),
                       height = grid::unit(1, "npc"))
 # plot actual image
-plt <- ggplot() +
+plt = ggplot() +
     annotation_custom(
         grob = x,
         xmin = 0,
@@ -233,24 +256,25 @@ plt + geom_point(aes(x = x, y = y,
           element_text(face = "bold", hjust = 0.5))
 ```
 
+This awesome figure allows us to see spatially where the gene is highly expressed and lowly expressed. Interestingly, this gene has high expression within the tissue with lower expression on the outside. We see essentially a gradient of expression of this gene, which is certainly a cool find. Remember that the red channel was able to do pretty well when comparing it to this genes expression with a correlation of 0.41.
 
+Let's do the same thing with the least correlated gene!
 
-
-```{r, fig.align='center'}
+```{r, fig.align='center', fig.width=7, fig.height=5}
 # get worst correlated gene
 
 # Finding the names with the minimum 'cors' value
-g_min <- cors_df %>%
-  filter(value == min(value, na.rm = TRUE)) %>%
+g_min = cors_df |>
+  filter(value == min(value, na.rm = TRUE)) |>
   pull(name)
 
 # get scaled expression of gene
-ggexp <- scale(mat[g_min,])[,1]
+ggexp = scale(mat[g_min,])[,1]
 # get locations
-df <- data.frame(data$posClean, ggexp)
+df = data.frame(data$posClean, ggexp)
 
 # Calculate the correlation coefficient
-corr_coefficient <- cor(mat[g_min, ], features)
+corr_coefficient = cor(mat[g_min, ], features)
 
 ggplot() + 
   geom_point(aes(x = mat[g_min,], y = features)) +
@@ -264,11 +288,17 @@ ggplot() +
                                with the red channel values."), width = 100),
     caption = "Data Source: Kidney Consortium database"
   )  +
-  annotate("text", x = -Inf, y = -Inf, label = sprintf("R: %.2f", corr_coefficient), 
+  annotate("text", x = -Inf, y = -Inf, label = sprintf("Correlation: %.2f", corr_coefficient), 
            hjust = -0.1, vjust = -.2, size = 5, color = "red") +  # customize theme
   theme(axis.text.y = element_blank(), axis.ticks.y = element_blank(), plot.title = 
           element_text(face = "bold", hjust = 0.5), axis.text.x = element_text(size = 10))
+```
 
+least
+
+plot
+
+```{r}
 # plot expression of gene
 plt + geom_point(aes(x = x, y = y,
                      color = ggexp),
@@ -286,53 +316,53 @@ plt + geom_point(aes(x = x, y = y,
 ```
 
 
+Finally, I wanted to show one more feature I looked at in this analysis: the red channel mean expression minus the blue channel.
 
-
-```{r, fig.align='center'}
+```{r, fig.align='center', fig.width=7, fig.height=5}
 # grab the mean of each red channel in each tile
-features <- map_dbl(tiles, ~ mean(.x[,,1]) - mean(.x[,,3])) # red channel - blue channel
+features = map_dbl(tiles, ~ mean(.x[,,1]) - mean(.x[,,3])) # red channel - blue channel
 
 # set names of the features
-names(features) <- names(tiles)
+names(features) = names(tiles)
 
 # get correlation of each tile with gene expression
-cors_list <- map(rownames(mat), ~ cor(mat[.x, ], features))
+cors_list = map(rownames(mat), ~ cor(mat[.x, ], features))
 # Convert the list to a numeric vector
-cors <- unlist(cors_list)
+cors = unlist(cors_list)
 
 # get best correlated gene
 # Assuming 'cors' is a named numeric vector
-cors_df <- tibble(name = rownames(mat), value = cors)
+cors_df = tibble(name = rownames(mat), value = cors)
 
 # Finding the names with the minimum 'cors' value
-g_max <- cors_df %>%
-  filter(value == max(value, na.rm = TRUE)) %>%
+g_max = cors_df |>
+  filter(value == max(value, na.rm = TRUE)) |>
   pull(name)
 
 # get scaled expression of gene
-ggexp_max <- scale(mat[g_max,])[,1]
+ggexp_max = scale(mat[g_max,])[,1]
 # get locations
-df <- data.frame(data$posClean, ggexp_max)
+df = data.frame(data$posClean, ggexp_max)
 # Use the rename function from dplyr
-df <- df %>%
+df = df |>
   rename(!!g_max := ggexp_max)
 
 # Finding the names with the minimum 'cors' value
-g_min <- cors_df %>%
-  filter(value == min(value, na.rm = TRUE)) %>%
+g_min = cors_df |>
+  filter(value == min(value, na.rm = TRUE)) |>
   pull(name)
 
 # get scaled expression of gene
-ggexp_min <- scale(mat[g_min,])[,1]
+ggexp_min = scale(mat[g_min,])[,1]
 
 # bind columns together
 df = bind_cols(df,ggexp_min)
 # rename
-names(df)[names(df) == "...4"] <- g_min
+names(df)[names(df) == "...4"] = g_min
 
 
 # Transform data to long format
-long_data <- df %>%
+long_data = df |>
   gather(key = "gene", value = "expression", g_max, g_min)
 
 # Create the plot with ggplot2
@@ -344,18 +374,23 @@ ggplot(long_data, aes(x = expression)) +
     x = "Correlation",
     y = "Count",
     title = paste0("Mean Correlation between Red minus Blue Channel and Gene Expression"),
-    subtitle = str_wrap(paste0("Two histograms are shown with the highest correlated gene,", g_max,", and the 
-                                lowest correlated gene, ",g_min,". The histogram is displaying the mean correlation
-                                per tile within the tissue image."), width = 100),
+    subtitle = str_wrap(paste0("Two histograms are shown with the highest correlated gene, ", g_max,", with a 
+                               mean correlation of ~",round(mean(long_data[long_data$gene == g_max[1],]$expression), 4),
+                               ", and the lowest correlated gene, ",g_min," with a mean correlation of
+                               ~",round(mean(long_data[long_data$gene == g_min[1],]$expression), 4),
+                               ". However, note the large difference in distributions."), width = 95),
     caption = "Data Source: Kidney Consortium database"
   )  +
   theme(axis.text.y = element_blank(), axis.ticks.y = element_blank(), plot.title = 
           element_text(face = "bold", hjust = 0.5), axis.text.x = element_text(size = 10))
-
-
-
-
 ```
+
+We see 
+
+
+## Final Thoughts
+
+
 
 
 ## Functions Used

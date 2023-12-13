@@ -12,7 +12,7 @@ Note: This is an original package I developed! Hence, there is no Github link to
 ## Package
 STTileMaker
 
-Website: XXX
+Website: https://jhu-statprogramming-fall-2022.github.io/biostat840-project3-pkgdown-calebhallinan
 
 
 
@@ -42,7 +42,7 @@ Create image tiles of each spot in a H&E image Spatial Transcriptomics Dataset
 
 data = STTileMaker_read_data(here::here("data/f12hr_140_processed/outs/"))
 
-####make tiles
+#### make tiles
 
 tiles = STTileMaker_make_tiles(data)
 
@@ -68,6 +68,16 @@ Clone this repository and build the package from within R
 
 
 ## 5 Website Customizations
+
+1. Changed bootswatch to darkly
+
+2. Changed navbar color to light
+
+3. Changed structure/order of my tabs
+
+4. Changed structure/order of the sidebar
+
+5. Edit footer to say words about using the package
 
 
 
