@@ -1,5 +1,5 @@
 ---
-title: "An Example of STTileMaker Usage"
+title: "How to use STTileMaker + an Example Analysis"
 output: rmarkdown::html_vignette
 vignette: >
   %\VignetteIndexEntry{STTileMaker}
@@ -8,7 +8,7 @@ vignette: >
 ---
 
 ```{r, include = FALSE}
-knitr::opts_chunk$set(
+knitr::opts_chunk$set(echo=TRUE, include = TRUE, warning=FALSE, message=FALSE,
   collapse = TRUE,
   comment = "#>"
 )
@@ -17,26 +17,27 @@ knitr::opts_chunk$set(
 
 ## Goal of this Analysis
 
-My current rotation project in Dr. Jean Fan's lab involves predicting gene expression from H&E images using spatial transcriptomics (ST) data. The method I have been using is called [Hist2ST](https://pubmed.ncbi.nlm.nih.gov/35849101/), which came out in 2022 and is one of the more popular methods to do this thus far in python. However, I have run into some trouble understanding their code and therefore implementing their method on our own data. Eventually I figured it out, but one task I had to do was make a new function to make "tiles" of the ST data where each spot was located. 
+In my current rotation project within Dr. Jean Fan's lab, I am tasked with predicting gene expression levels by analyzing H&E-stained images through the lens of spatial transcriptomics (ST) data. To accomplish this, I have employed a technique known as [Hist2ST](https://pubmed.ncbi.nlm.nih.gov/35849101/), a method established in 2022 and widely recognized for its usefulness in Python environments. Despite initial challenges in deciphering and adapting the Hist2ST code for our data sets, I (finally) successfully ran Hist2ST on our data.
 
-From my understanding thus far in the ST field, many researchers work in R and not python. Therefore, I wanted to transfer my workflow to be in both python and R. So, I decided to create a similar tile function in R and name it STTileMaker.
+A pivotal component of my work involved developing a function to segment the ST data into distinct "tiles" according to the spatial positioning of each spot.
 
-The goal of the function is quite simple - make tiles of the H&E image exactly where spots are located in the image. With this data, we can perform more downstream analysis such as RGB and gene expression correlation, classification of spots, and eventually become input to an algorithm in R that will predict gene expression of these tiles. For the purpose of this data analysis, I will demonstrate correlation between gene expression and RGB information in the H&E images.
+Recognizing that a significant portion of the ST research community prefers R for data analysis, I was motivated to enhance the accessibility and applicability of my workflow. This led to the creation of an analogous function in R, which I have aptly named STTileMaker.
 
-Questions then become:
+The STTileMaker package is designed with a straightforward objective: to generate segmented tiles from H&E images that align with the precise locations of the spots within. Further, it can successfully read in all ST data to therefore be used in future downstream analysis. This capability sets the stage for a broad spectrum of subsequent analytical procedures, including the correlation of RGB values and gene expression, classification of spot characteristics, and the eventual integration of these tiles into an R-based algorithm poised to predict gene expression patterns. In the context of this data analysis, I will be demonstrating how gene expression correlates with RGB intensity within an H&E image.
+
+Questions in the analysis then become:
 
 1. What gene is most correlated to RGB intensities in an H&E image?
 
 2. What gene is least correlated to RGB intensities in an H&E image? 
 
-3. ???
+3. Does one channel predict better than others?
 
-The data of interest is a public dataset located at the  [(Re)Building a Kidney Consortium database](https://www.atlas-d2k.org/chaise/record/#2/RNASeq:Experiment/RID=17-H1QC). It is a spatial gene expression dataset by Space Ranger 1.2.1 from "a 8-10 week old C57BL6/J female mouse kidneys at time point 12 hours (n=1) following bilateral ischemia reperfusion injury." For more information on the data, including a dictionary and structure of the data, please click on the link. Unfortunately, the dataset is quite large and therefore I was not able to add it to github. 
+The data of interest is freely accessible from the[(Re)Building a Kidney Consortium database](https://www.atlas-d2k.org/chaise/record/#2/RNASeq:Experiment/RID=17-H1QC), offering a comprehensive spatial gene expression profile created using Space Ranger 1.2.1. The data encapsulates gene expression from the kidneys of an 8-10 week old C57BL6/J female mouse, specifically captured at the 12-hour mark following bilateral ischemia reperfusion injury. For detailed insights, including a data dictionary and the data's structure, I encourage visiting the provided link.
 
-To download the data, 
+Due to the large size of the dataset, it was not possible to host it on GitHub. Nonetheless, I've included a snippet of code that, when executed, will facilitate the direct download of the dataset into a locally designated folder named "data." I hope this proves helpful!
 
-
-## Read in Functions
+Now, lets begin the analysis. First we will read in all the necassary packages for the analysis.
 
 ```{r setup}
 # read in functions
@@ -46,16 +47,12 @@ library(tidyverse) # for data manipulation
 library(here) # for file archiving
 library(paletteer) # for colors
 library(ggrepel) # for plotting
-library(googledrive)
-
 ```
 
 
-
-## Read in data, download if not there
+The code below is the code snippit that will gather the data from the website and save it to a folder called "data." This step is crucial for the analysis, as we are obtaining the dataset. However, you are free to use any ST dataset you would like for STTileMaker.
 
 ```{r}
-
 # if file doesn't exist, download the data
 if (!file.exists(here("data/f12hr_140_processed/"))) {
   
@@ -86,17 +83,15 @@ if (!file.exists(here("data/f12hr_140_processed/"))) {
   # message when done
   message("Finished!") 
 }
-
 ```
 
 
+Since we have all the data downloaded, we are ready to read it in with the "STTileMaker_read_data" function within the package. The object "data" within the code, which is our read in data, is a list of lists containing important features needed such as spot positions, cleaned expression data, etc. For all functions within the package please take a look at the docs section for more details.
 
-## Demonstration of STTileMaker
+After the data is read in, we can create the tiles from each spot's location by running the "STTileMaker_make_tiles" function. The output is a list of images, where each image is a "tile" or "patch" of the H&E image that contains a single spot. To ensure it worked successfully, we run the "STTileMaker_plot_tile" function to plot a single tile to view.
 
 ```{r, fig.align='center'}
 # read in data
-
-# NOTE: make data easier to get
 data = STTileMaker_read_data(here::here("data/f12hr_140_processed/outs/"))
 
 # make tiles
@@ -105,93 +100,291 @@ tiles = STTileMaker_make_tiles(data)
 # check to see it works
 STTileMaker_plot_tile(tiles, 1)
 STTileMaker_plot_tile(tiles, 100)
+# works!!
 ```
 
+As the package continues to evolve, additional functions will be incorporated. However, the above selection represents the full range of functionalities available at this moment.
 
+Now begins the analysis! 
 
-## Check correlation of RGB image and gene expression
-
-```{r, message=FALSE, warning=FALSE}
+```{r, fig.align='center'}
 # grab the mean of each red channel in each tile
-features <- sapply(1:length(tiles), function(i) {
-    #1 - mean(tiles[[i]])
-    mean(tiles[[i]][,,1]) ## red
-    # mean(tiles[[i]][,,1] - tiles[[i]][,,3]) ## red minus blue
-})
+features <- map_dbl(tiles, ~ mean(.x[,,1])) # red channel
+
 # set names of the features
 names(features) <- names(tiles)
 
 # plot the histogram 
-ggplot(data = data.frame(features), aes(x = features)) + geom_histogram()
+ggplot(data = data.frame(features), aes(x = features)) + 
+  geom_histogram() +
+  theme_linedraw() +
+  labs(
+    x = "Mean value of Red Channel",
+    y = "Count",
+    title = paste0("Mean Red Channel values"),
+    subtitle = str_wrap(paste0("Mean values of the red channel per tile. Note that it is fairly high for all tiles
+                               located within tissue."), width = 100),
+    caption = "Data Source: Kidney Consortium database"
+  )  +
+  theme(axis.text.y = element_blank(), axis.ticks.y = element_blank(), plot.title = 
+          element_text(face = "bold", hjust = 0.5), axis.text.x = element_text(size = 10))
+```
 
 
+
+```{r, fig.align='center'}
 # normalize the data
 normFactor <- colSums(as.matrix(data$geneCountsClean))
 mat <- t(t(as.matrix(data$geneCountsClean))/normFactor)
 mat <- log10(mat * 1e6 +1)
 
 # get correlation of each tile with gene expression
-cors <- sapply(rownames(mat), function(g) {
-    cor(mat[g,], features)
-})
+cors_list <- map(rownames(mat), ~ cor(mat[.x, ], features))
+# Convert the list to a numeric vector
+cors <- unlist(cors_list)
+
 
 # plot the histogram 
-ggplot(data = data.frame(cors), aes(x = cors)) + geom_histogram()
-
-# get worst and best correlated gene
-g_min = names(which(cors == min(cors, na.rm=TRUE)))
-g_max = names(which(cors == max(cors, na.rm=TRUE)))
-
-
-####
-
-
-# 
-# ggexp <- scale(mat[g,])[,1]
-# df <- data.frame(data$posClean, ggexp)
-# 
-# 
-# 
-# ## now we can plot with the image
-# x <- grid::rasterGrob(data$img,
-#                       interpolate = FALSE,
-#                       width = grid::unit(1, "npc"),
-#                       height = grid::unit(1, "npc"))
-# 
-# plt <- ggplot() +
-#     annotation_custom(
-#         grob = x,
-#         xmin = 0,
-#         xmax = ncol(x$raster),
-#         ymin = 0,
-#         ymax = nrow(x$raster)) +
-#     coord_fixed(
-#         xlim = c(0, ncol(x$raster)),
-#         ylim = c(0, nrow(x$raster))) +
-#     theme_void()
-# plt
-# 
-# plt + geom_point(aes(x = x, y = y,
-#                      color = ggexp),
-#                  size = data$r/5,
-#                  data = df) + ggtitle(g) +
-#     scale_colour_gradient2(
-#         low = "blue",
-#         mid = "white",
-#         high = "red")
-# 
-# plot(mat[g,], features)
-# cor(mat[g,], features)
-# 
-# ## note since I'm using the low res image, tiles are very small, not many features beyond intensities
-# dim(tiles[[1]])
+ggplot(data = data.frame(cors), aes(x = cors)) + 
+  geom_histogram() +
+  labs(
+    x = "Correlation",
+    y = "Count",
+    title = paste0("Mean Correlation between Red Channel and Gene Expression"),
+    subtitle = str_wrap(paste0("Correlation histogram of gene expression with the tissue and 
+                               red channel values. Note the little deviation from 0, as only a few
+                               genes are found to be correlated."), width = 100),
+    caption = "Data Source: Kidney Consortium database"
+  )  +
+  theme(axis.text.y = element_blank(), axis.ticks.y = element_blank(), plot.title = 
+          element_text(face = "bold", hjust = 0.5), axis.text.x = element_text(size = 10))
 
 ```
 
 
+```{r, fig.align='center'}
+# get best correlated gene
+# Assuming 'cors' is a named numeric vector
+cors_df <- tibble(name = rownames(mat), value = cors)
+
+# Finding the names with the minimum 'cors' value
+g_max <- cors_df %>%
+  filter(value == max(value, na.rm = TRUE)) %>%
+  pull(name)
+
+# get scaled expression of gene
+ggexp <- scale(mat[g_max,])[,1]
+# get locations
+df <- data.frame(data$posClean, ggexp)
+
+
+# Calculate the correlation coefficient
+corr_coefficient <- cor(mat[g_max, ], features)
+
+ggplot() + 
+  geom_point(aes(x = mat[g_max,], y = features)) +
+  geom_smooth(aes(x = mat[g_max,], y = features), method = "lm") +
+  theme_linedraw() +
+  labs(
+    x = "Log Gene Expression",
+    y = "Mean value of Red Channel",
+    title = paste0("Correlation of ",g_max," Expression and Mean Red Channel value"),
+    subtitle = str_wrap(paste0("Mean expression per tile of gene ", g_max,". This is the most correlated gene
+                               with the red channel values."), width = 100),
+    caption = "Data Source: Kidney Consortium database"
+  )  +
+  annotate("text", x = -Inf, y = -Inf, label = sprintf("R: %.2f", corr_coefficient), 
+           hjust = -0.1, vjust = -.2, size = 5, color = "red") +  # customize theme
+  theme(axis.text.y = element_blank(), axis.ticks.y = element_blank(), plot.title = 
+          element_text(face = "bold", hjust = 0.5), axis.text.x = element_text(size = 10))
+
+
+# now we can plot with the image
+x <- grid::rasterGrob(data$img,
+                      interpolate = FALSE,
+                      width = grid::unit(1, "npc"),
+                      height = grid::unit(1, "npc"))
+# plot actual image
+plt <- ggplot() +
+    annotation_custom(
+        grob = x,
+        xmin = 0,
+        xmax = ncol(x$raster),
+        ymin = 0,
+        ymax = nrow(x$raster)) +
+    coord_fixed(
+        xlim = c(0, ncol(x$raster)),
+        ylim = c(0, nrow(x$raster))) +
+    theme_void()
+
+# plot expression of gene
+plt + geom_point(aes(x = x, y = y,
+                     color = ggexp),
+                 size = data$r/5,
+                 data = df) +
+    scale_colour_gradient2(
+        low = "blue",
+        mid = "white",
+        high = "red") + 
+  labs(
+    title = paste0("Mean Expression of ",g_max," per Spot"),
+                   color = "Mean Expression") +  # customize theme
+  theme(axis.text.y = element_blank(), axis.ticks.y = element_blank(), plot.title = 
+          element_text(face = "bold", hjust = 0.5))
+```
+
+
+
+
+```{r, fig.align='center'}
+# get worst correlated gene
+
+# Finding the names with the minimum 'cors' value
+g_min <- cors_df %>%
+  filter(value == min(value, na.rm = TRUE)) %>%
+  pull(name)
+
+# get scaled expression of gene
+ggexp <- scale(mat[g_min,])[,1]
+# get locations
+df <- data.frame(data$posClean, ggexp)
+
+# Calculate the correlation coefficient
+corr_coefficient <- cor(mat[g_min, ], features)
+
+ggplot() + 
+  geom_point(aes(x = mat[g_min,], y = features)) +
+  geom_smooth(aes(x = mat[g_min,], y = features), method = "lm") +
+  theme_linedraw() +
+  labs(
+    x = "Log Gene Expression",
+    y = "Mean value of Red Channel",
+    title = paste0("Correlation of ",g_min," Expression and Mean Red Channel value"),
+    subtitle = str_wrap(paste0("Mean expression per tile of gene ", g_min,". This is the least correlated gene
+                               with the red channel values."), width = 100),
+    caption = "Data Source: Kidney Consortium database"
+  )  +
+  annotate("text", x = -Inf, y = -Inf, label = sprintf("R: %.2f", corr_coefficient), 
+           hjust = -0.1, vjust = -.2, size = 5, color = "red") +  # customize theme
+  theme(axis.text.y = element_blank(), axis.ticks.y = element_blank(), plot.title = 
+          element_text(face = "bold", hjust = 0.5), axis.text.x = element_text(size = 10))
+
+# plot expression of gene
+plt + geom_point(aes(x = x, y = y,
+                     color = ggexp),
+                 size = data$r/5,
+                 data = df) +
+    scale_colour_gradient2(
+        low = "blue",
+        mid = "white",
+        high = "red") + 
+  labs(
+    title = paste0("Mean Expression of ",g_min," per Spot"),
+                   color = "Mean Expression") +  # customize theme
+  theme(axis.text.y = element_blank(), axis.ticks.y = element_blank(), plot.title = 
+          element_text(face = "bold", hjust = 0.5))
+```
+
+
+
+
+```{r, fig.align='center'}
+# grab the mean of each red channel in each tile
+features <- map_dbl(tiles, ~ mean(.x[,,1]) - mean(.x[,,3])) # red channel - blue channel
+
+# set names of the features
+names(features) <- names(tiles)
+
+# get correlation of each tile with gene expression
+cors_list <- map(rownames(mat), ~ cor(mat[.x, ], features))
+# Convert the list to a numeric vector
+cors <- unlist(cors_list)
+
+# get best correlated gene
+# Assuming 'cors' is a named numeric vector
+cors_df <- tibble(name = rownames(mat), value = cors)
+
+# Finding the names with the minimum 'cors' value
+g_max <- cors_df %>%
+  filter(value == max(value, na.rm = TRUE)) %>%
+  pull(name)
+
+# get scaled expression of gene
+ggexp_max <- scale(mat[g_max,])[,1]
+# get locations
+df <- data.frame(data$posClean, ggexp_max)
+# Use the rename function from dplyr
+df <- df %>%
+  rename(!!g_max := ggexp_max)
+
+# Finding the names with the minimum 'cors' value
+g_min <- cors_df %>%
+  filter(value == min(value, na.rm = TRUE)) %>%
+  pull(name)
+
+# get scaled expression of gene
+ggexp_min <- scale(mat[g_min,])[,1]
+
+# bind columns together
+df = bind_cols(df,ggexp_min)
+# rename
+names(df)[names(df) == "...4"] <- g_min
+
+
+# Transform data to long format
+long_data <- df %>%
+  gather(key = "gene", value = "expression", g_max, g_min)
+
+# Create the plot with ggplot2
+ggplot(long_data, aes(x = expression)) +
+  geom_histogram() +
+  facet_wrap(~ gene) +
+  theme_linedraw() +
+  labs(
+    x = "Correlation",
+    y = "Count",
+    title = paste0("Mean Correlation between Red minus Blue Channel and Gene Expression"),
+    subtitle = str_wrap(paste0("Two histograms are shown with the highest correlated gene,", g_max,", and the 
+                                lowest correlated gene, ",g_min,". The histogram is displaying the mean correlation
+                                per tile within the tissue image."), width = 100),
+    caption = "Data Source: Kidney Consortium database"
+  )  +
+  theme(axis.text.y = element_blank(), axis.ticks.y = element_blank(), plot.title = 
+          element_text(face = "bold", hjust = 0.5), axis.text.x = element_text(size = 10))
+
+
+
+
+```
+
 
 ## Functions Used
 
+*You must use at least six different functions from dplyr, tidyr, lubridate, stringr, or forcats:*
+
+1. tibble() - tidyr
+2. filter() - dplyr
+3. pull() - dplyr
+4. rename() - dplyr
+5. bind_cols() - dplyr
+6. gather() - tidyr
+7. str_wrap() - stringr
+
+
+*You must use at least two functions from purrr:*
+
+1. map_dbl() - purrr
+2. map() - purrr
+
+*Your analysis should include at least three plots with you using at least three different geom_() functions from ggplot2 (or another package with geom_() functions)":*
+
+1. geom_point() - ggplot2
+2. geom_histogram() - ggplot2
+3. geom_smooth() - ggplot2
+
+*At least one plot should using a type of faceting (facet_grid() or facet_wrap()).:*
+
+- Got it!
 
 
 To note: I asked if I could use a non-TidyTuesday dataset on the discussion board and Joe said "As long as you adhere to principles of reproducibility (make data accessible/available in some fashion, etc), then that is totally fine." So I did, and thanks for letting me!
