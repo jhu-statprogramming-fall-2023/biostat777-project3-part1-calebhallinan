@@ -38,17 +38,15 @@ Create image tiles of each spot in a H&E image Spatial Transcriptomics Dataset
 
 ## Example
 
-#### Make Tiles of each Spot in a Spatial Transcriptomics Dataset
-
-# read in data
+#### read in data
 
 data = STTileMaker_read_data(here::here("data/f12hr_140_processed/outs/"))
 
-# make tiles
+####make tiles
 
 tiles = STTileMaker_make_tiles(data)
 
-# check to see it works
+#### check to see it works
 
 STTileMaker_plot_tile(tiles, 1)
 STTileMaker_plot_tile(tiles, 100)
@@ -69,7 +67,7 @@ Clone this repository and build the package from within R
 
 
 
-## 5 Customizations
+## 5 Website Customizations
 
 
 
