@@ -12,7 +12,7 @@ Note: This is an original package I developed! Hence, there is no Github link to
 ## Package
 STTileMaker
 
-Website: https://jhu-statprogramming-fall-2022.github.io/biostat840-project3-pkgdown-calebhallinan
+Website: https://jhu-statprogramming-fall-2023.github.io/biostat777-project3-part1-calebhallinan/
 
 
 
