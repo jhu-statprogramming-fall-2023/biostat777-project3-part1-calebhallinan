@@ -1,18 +1,27 @@
-url: ~
+url: https://jhu-statprogramming-fall-2023.github.io/biostat777-project3-part1-calebhallinan/
 template:
   bootstrap: 5
   bootswatch: darkly
 navbar:
   bg: light
   structure:
-    left:  [search]
-    right: [articles, reference]
+    left: search
+    right:
+    - articles
+    - reference
 home:
   sidebar:
-    structure: [authors, dev, community, citation, links, license]
+    structure:
+    - authors
+    - dev
+    - community
+    - citation
+    - links
+    - license
 footer:
   structure:
     left: developed_by
-    right: [legal]
+    right: legal
   components:
     legal: Package is not guaranteed to run, please submit pull requests with issues.
+
