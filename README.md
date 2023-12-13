@@ -84,3 +84,4 @@ Clone this repository and build the package from within R
 ## Notes/Thoughts:
 
 - This was a cool project! I am glad I was able to create a function that I can use for my research :)
+- Unfortunately, I was not able to get the here package to work in my vignette folder. Therefore, you will see direct path locations. I will continue to look into this, but wanted to let you know!

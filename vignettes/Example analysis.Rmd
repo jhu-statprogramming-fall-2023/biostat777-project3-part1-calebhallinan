@@ -115,7 +115,7 @@ STTileMaker_plot_tile(tiles, 100)
 
 As the package continues to evolve, additional functions will be incorporated. However, the above selection represents the full range of functionalities available at this moment.
 
-Now begins the analysis! 
+Now let's begin the analysis! 
 
 
 
@@ -221,7 +221,7 @@ As we see, the highest correlated gene was Kap with a correlation of 0.41. While
 
 Now let's see what the highest correlated gene, Kap, looks like on the tissue.
 
-```{r}
+```{r, fig.align='center', fig.width=7, fig.height=5}
 # now we can plot with the image
 x = grid::rasterGrob(data$img,
                       interpolate = FALSE,
@@ -294,11 +294,11 @@ ggplot() +
           element_text(face = "bold", hjust = 0.5), axis.text.x = element_text(size = 10))
 ```
 
-least
+With a correlation of -0.27, Igfbp5 was was the least correlated gene when comparing gene expression with red channel intensity. We see here a lot of tiles that did not contain any expression of this gene, with those tiles that did displaying a clear negative relationship.
 
-plot
+Let's take a look at the gene expression on the tissue just to have an idea of what it would look like.
 
-```{r}
+```{r, fig.align='center', fig.width=7, fig.height=5}
 # plot expression of gene
 plt + geom_point(aes(x = x, y = y,
                      color = ggexp),
@@ -315,6 +315,7 @@ plt + geom_point(aes(x = x, y = y,
           element_text(face = "bold", hjust = 0.5))
 ```
 
+Well, it is of no surprise that it isn't very good! To me, it seems a bit sporadic and all over the place so we would likely not use this gene for any more downstream analysis.
 
 Finally, I wanted to show one more feature I looked at in this analysis: the red channel mean expression minus the blue channel.
 
@@ -340,7 +341,7 @@ g_max = cors_df |>
   pull(name)
 
 # get scaled expression of gene
-ggexp_max = scale(mat[g_max,])[,1]
+ggexp_max = mat[g_max,]
 # get locations
 df = data.frame(data$posClean, ggexp_max)
 # Use the rename function from dplyr
@@ -353,12 +354,14 @@ g_min = cors_df |>
   pull(name)
 
 # get scaled expression of gene
-ggexp_min = scale(mat[g_min,])[,1]
+ggexp_min = mat[g_min,]
 
 # bind columns together
 df = bind_cols(df,ggexp_min)
+df = bind_cols(df,features)
 # rename
 names(df)[names(df) == "...4"] = g_min
+names(df)[names(df) == "...5"] = "redminusblue"
 
 
 # Transform data to long format
@@ -366,30 +369,32 @@ long_data = df |>
   gather(key = "gene", value = "expression", g_max, g_min)
 
 # Create the plot with ggplot2
-ggplot(long_data, aes(x = expression)) +
-  geom_histogram() +
+ggplot(long_data, aes(x = expression, y = redminusblue)) +
+  geom_point() +
+  geom_smooth(method = "lm") +
   facet_wrap(~ gene) +
   theme_linedraw() +
   labs(
-    x = "Correlation",
-    y = "Count",
+    x = "Log Gene Expression",
+    y = "Mean value of Red Channel minus Blue Channel",
     title = paste0("Mean Correlation between Red minus Blue Channel and Gene Expression"),
-    subtitle = str_wrap(paste0("Two histograms are shown with the highest correlated gene, ", g_max,", with a 
-                               mean correlation of ~",round(mean(long_data[long_data$gene == g_max[1],]$expression), 4),
-                               ", and the lowest correlated gene, ",g_min," with a mean correlation of
-                               ~",round(mean(long_data[long_data$gene == g_min[1],]$expression), 4),
-                               ". However, note the large difference in distributions."), width = 95),
+    subtitle = str_wrap(paste0("Two plots are displayed with the highest correlated gene, ", g_max,", with a 
+                               correlation of ",round(max(cors_df$value, na.rm = TRUE), 2),
+                               ", and the lowest correlated gene, ",g_min," with a correlation of
+                               ",round(min(cors_df$value, na.rm = TRUE), 2),
+                               "."), width = 95),
     caption = "Data Source: Kidney Consortium database"
   )  +
   theme(axis.text.y = element_blank(), axis.ticks.y = element_blank(), plot.title = 
           element_text(face = "bold", hjust = 0.5), axis.text.x = element_text(size = 10))
 ```
 
-We see 
+Oddly enough, we found that there were genes with a higher correlation when using the mean red channel values minus the blue channel values. The two shown above are the most highly correlated gene and the least correlated gene.
 
 
 ## Final Thoughts
 
+In our data analysis demonstration, we illustrated the effective execution of all functions within STTileMaker, leveraging this tool to initiate a spatial transcriptomics (ST) data analysis, and presented some compelling findings. Moving forward, we aim to expand the package's capabilities by introducing additional functions and enhancements for more sophisticated analysis of ST tile data.
 
 
 
@@ -420,13 +425,6 @@ We see
 *At least one plot should using a type of faceting (facet_grid() or facet_wrap()).:*
 
 - Got it!
-
-
-To note: I asked if I could use a non-TidyTuesday dataset on the discussion board and Joe said "As long as you adhere to principles of reproducibility (make data accessible/available in some fashion, etc), then that is totally fine." So I did, and thanks for letting me!
-
-
-
-
 
 
 
